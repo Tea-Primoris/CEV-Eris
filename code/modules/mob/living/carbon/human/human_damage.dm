@@ -223,6 +223,18 @@
 	if(!(species.flags & NO_POISON) && !isSynthetic())
 		adjustToxLoss(amount-getToxLoss())
 
+// Overriding this procs because halloss accumulates for humans
+/mob/living/carbon/human/adjustHalLoss(amount)
+	if(status_flags & GODMODE)
+		return FALSE
+	adjust_ha_target(amount)
+
+/mob/living/carbon/human/setHalLoss(amount)
+	if(status_flags & GODMODE)
+		return FALSE
+	set_ha_target(amount)
+	halloss = 0
+
 ////////////////////////////////////////////
 
 //Returns a list of damaged organs
@@ -410,3 +422,21 @@ This function restores all organs.
 
 	return damage
 
+// Halloss accumulation. Halloss will try to reach certain target.
+/mob/living/carbon/human/proc/adjust_ha_target(amount)
+	halloss_accumulation_target += amount
+	handle_ha()
+
+/mob/living/carbon/human/proc/set_ha_target(amount)
+	halloss_accumulation_target = amount
+	handle_ha()
+
+/mob/living/carbon/human/proc/handle_ha()
+	if(halloss != halloss_accumulation_target)
+		halloss_accumulation_timer = addtimer(CALLBACK(src, .proc/ha_tick), 1 SECONDS, TIMER_UNIQUE | TIMER_OVERRIDE)
+
+/mob/living/carbon/human/proc/ha_tick()
+	var/adjustment = halloss_accumulation_target > halloss \
+		        	? min(halloss + halloss_accumulation_target / 30, halloss_accumulation_target) \
+		            : max(halloss - 6.66, halloss_accumulation_target)
+	halloss += adjustment

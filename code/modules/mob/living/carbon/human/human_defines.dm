@@ -97,3 +97,5 @@
 	var/language_blackout = 0
 	var/suppress_communication = 0
 
+	var/halloss_accumulation_timer //Used in human_damage.dm for storing timers of halloss damage over time
+	var/halloss_accumulation_target = 0
